@@ -45,7 +45,7 @@ const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .orFail(new Error('RecordNotFound'))
-    .then((user) => res.status(201).send({ data: user }))
+    .then((user) => res.status(201).send(user))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR).send({
