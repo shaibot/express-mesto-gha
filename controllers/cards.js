@@ -33,6 +33,9 @@ const getAllCards = async (req, res) => {
     if (cards.length === 0 && page !== 1) {
       throw new Error('Page not found');
     }
+    if (!cards || cards.length === 0) {
+      return res.status(VALIDATION_ERROR).send({ message: 'Список карточек не найден' });
+    }
     res.status(200).send({
       count,
       cards,
@@ -42,6 +45,7 @@ const getAllCards = async (req, res) => {
   } catch (error) {
     handleError(error, res);
   }
+  return undefined;
 };
 
 // // обработчик POST-запроса на создание новой карточки
@@ -68,7 +72,9 @@ const getAllCards = async (req, res) => {
 const createCard = async (req, res) => {
   try {
     const { name, link } = req.body;
-
+    if (!name || name.length < 2 || name.length > 30) {
+      return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+    }
     if (!name || !link) {
       return res
         .status(VALIDATION_ERROR)
@@ -130,7 +136,7 @@ const deleteCardById = async (req, res) => {
     // Проверяем, что текущий пользователь является владелецем карточки
     if (card.owner.toString() !== userId) {
       return res
-        .status(FORBIDDEN_ERROR)
+        .status(VALIDATION_ERROR)
         .send({ message: 'У вас нет прав на удаление этой карточки' });
     }
 
