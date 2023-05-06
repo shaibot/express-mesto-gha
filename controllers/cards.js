@@ -2,10 +2,8 @@
 const {
   handleError,
   NOT_FOUND_ERROR,
-  UNAUTHORIZED_ERROR,
-  CONFLICT_ERROR,
-  FORBIDDEN_ERROR,
   INTERNAL_SERVER_ERROR,
+  VALIDATION_ERROR,
 } = require('../errors/errors');
 const Card = require('../models/card');
 
@@ -73,13 +71,13 @@ const createCard = async (req, res) => {
 
     if (!name || !link) {
       return res
-        .status(NOT_FOUND_ERROR)
+        .status(VALIDATION_ERROR)
         .send({ message: 'Name and link are required' });
     }
 
     if (!req.user || !req.user._id) {
       return res
-        .status(UNAUTHORIZED_ERROR)
+        .status(VALIDATION_ERROR)
         .send({ message: 'You must be logged in to create a card' });
     }
 
@@ -91,7 +89,7 @@ const createCard = async (req, res) => {
     // console.error(`${err.name}: ${err.message}`);
     if (err.codeName === 'DuplicateKey') {
       return res
-        .status(CONFLICT_ERROR)
+        .status(VALIDATION_ERROR)
         .send({ message: 'A card with the same name already exists' });
     }
     return res

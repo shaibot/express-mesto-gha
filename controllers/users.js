@@ -43,25 +43,65 @@ const getUsers = (req, res) => {
 
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
+
+  if (!name || name.length < 2 || name.length > 30) {
+    return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+  }
+
+  if (!about || about.length < 2 || about.length > 30) {
+    return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+  }
+
+  if (!avatar) {
+    return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+  }
+
   User.create({ name, about, avatar })
-    .orFail(new Error('RecordNotFound'))
-    .then((user) => res.status(201).send(user))
+    .then((user) => res.status(201).send({
+      data: {
+        id: user._id,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+      },
+    }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR).send({
-          message: 'Переданы некорректные данные при обновлении профиля',
-        });
-      }
-      if (error.message === 'RecordNotFound') {
-        return res.status(NOT_FOUND_ERROR).send({
-          message: 'Пользователь не найден',
+          message: 'Переданы некорректные данные при создании пользователя',
         });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({
         message: 'На сервере произошла ошибка',
       });
     });
+  return undefined;
 };
+
+// const createUser = (req, res) => {
+//   const { name, about, avatar } = req.body;
+//   User.create({ name, about, avatar })
+//     .orFail(new Error('RecordNotFound'))
+//     .then((user) => res.status(201).send({ data: {
+//       id: user._id, name: user.name, about: user.about, avatar: user.avatar,
+//     },
+// }))
+//     .catch((error) => {
+//       if (error.name === 'ValidationError') {
+//         return res.status(VALIDATION_ERROR).send({
+//           message: 'Переданы некорректные данные при обновлении профиля',
+//         });
+//       }
+//       if (error.message === 'RecordNotFound') {
+//         return res.status(NOT_FOUND_ERROR).send({
+//           message: 'Пользователь не найден',
+//         });
+//       }
+//       return res.status(INTERNAL_SERVER_ERROR).send({
+//         message: 'На сервере произошла ошибка',
+//       });
+//     });
+// };
 
 const updateProfile = (req, res) => {
   const { name, about } = req.body;
@@ -130,6 +170,27 @@ const updateProfile = (req, res) => {
 // }
 // ]
 
+// const updateAvatar = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id);
+//     if (!user) {
+//       return res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь не найден' });
+//     }
+//     user.avatar = req.body.avatar;
+//     await user.save();
+
+//     res.send({ message: 'Аватар обновлен' });
+//   } catch (err) {
+//     if (err.name === 'ValidationError') {
+// return res.status(VALIDATION_ERROR).send({
+//  message: 'Переданы некорректные данные при обновлении аватара' });
+//     }
+
+//     res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка сервера' });
+//   }
+//   return undefined;
+// };
+
 const updateAvatar = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -139,7 +200,8 @@ const updateAvatar = async (req, res) => {
     user.avatar = req.body.avatar;
     await user.save();
 
-    res.send({ message: 'Аватар обновлен' });
+    // Возвращаем в ответе url-адрес аватара, который был передан в запросе
+    res.send({ message: 'Аватар обновлен', avatar: req.body.avatar });
   } catch (err) {
     if (err.name === 'ValidationError') {
       return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении аватара' });
