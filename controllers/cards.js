@@ -5,6 +5,7 @@ const {
   UNAUTHORIZED_ERROR,
   CONFLICT_ERROR,
   FORBIDDEN_ERROR,
+  INTERNAL_SERVER_ERROR,
 } = require('../errors/errors');
 const Card = require('../models/card');
 
@@ -87,7 +88,7 @@ const createCard = async (req, res) => {
     const createdCard = await Card.findById(card._id).lean();
     return res.status(201).send(createdCard); // add return statement here
   } catch (err) {
-    console.error(`${err.name}: ${err.message}`);
+    // console.error(`${err.name}: ${err.message}`);
     if (err.codeName === 'DuplicateKey') {
       return res
         .status(CONFLICT_ERROR)
@@ -164,10 +165,10 @@ const likeCard = async (req) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
-    console.log(card);
+    // console.log(card);
     return card;
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     throw new Error('Failed to update card');
   }
 };

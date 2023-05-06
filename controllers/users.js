@@ -77,7 +77,7 @@ const updateProfile = (req, res) => {
     .orFail(() => new Error('NotFound'))
     .then((user) => {
       if (user) {
-        return res.status(200).send(user);
+        return res.status(200).send({ data: user });
       }
       return res.status(NOT_FOUND_ERROR).send({
         message: `Пользователь с указанным _id не найден ${NOT_FOUND_ERROR}`,
