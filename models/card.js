@@ -13,12 +13,12 @@ const cardSchema = new mongoose.Schema({
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+    ref: 'user',
     required: true,
   },
   likes: {
     type: [mongoose.Schema.Types.ObjectId],
-    ref: "user",
+    ref: 'user',
     default: [],
   },
   createdAt: {
@@ -28,8 +28,6 @@ const cardSchema = new mongoose.Schema({
 });
 
 // Модель карточки
-const Card = mongoose.model("card", cardSchema);
+const Card = mongoose.model('card', cardSchema);
 
-module.exports = {
-  Card
-};
+module.exports = Card;
