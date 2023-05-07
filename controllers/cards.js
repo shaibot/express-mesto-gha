@@ -37,10 +37,10 @@ const getAllCards = async (req, res) => {
       return res.status(VALIDATION_ERROR).send({ message: 'Список карточек не найден' });
     }
     res.status(200).send({
-      count,
+      // count,
       cards,
-      currentPage: page,
-      pageCount: Math.ceil(count / limit),
+      // currentPage: page,
+      // pageCount: Math.ceil(count / limit),
     });
   } catch (error) {
     handleError(error, res);
