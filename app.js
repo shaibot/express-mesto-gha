@@ -15,6 +15,7 @@ const app = express();
 
 // экспортируем роутеры
 const router = require('./routes/index');
+const { NOT_FOUND_ERROR } = require('./errors/errors');
 
 mongoose
   .connect('mongodb://127.0.0.1:27017/mestodb')
