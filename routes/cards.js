@@ -6,13 +6,13 @@ const {
   dislikeCard,
   deleteCards,
 } = require('../controllers/cards');
-const validateLikeRequest = require('../middlewares/validateLikeRequest');
+// const validateLikeRequest = require('../middlewares/validateLikeRequest');
 
 cardsRouter.get('/', getAllCards);
 cardsRouter.post('/', createCard);
 cardsRouter.delete('/:cardId', deleteCards);
 
-cardsRouter.put('/:cardId/likes', validateLikeRequest, likeCard); // поставить лайк карточке
-cardsRouter.delete('/:cardId/likes', validateLikeRequest, dislikeCard); // убрать лайк с карточки
+cardsRouter.put('/:cardId/likes', likeCard); // поставить лайк карточке
+cardsRouter.delete('/:cardId/likes', dislikeCard); // убрать лайк с карточки
 
 module.exports = cardsRouter;

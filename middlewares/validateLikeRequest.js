@@ -1,11 +1,11 @@
-const validateLikeRequest = (req, res, next) => {
-  if (!req.params.cardId) {
-    return res.status(400).json({ message: 'Missing cardId in request' });
-  }
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-  return next();
-};
+// const { default: mongoose } = require("mongoose");
 
-module.exports = validateLikeRequest;
+// const validateCardId = (req, res, next) => {
+//   if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+//     return res.status(400).send({
+//       message: 'Некорректный ID карточки',
+//     });
+//   }
+// }
+
+// module.exports = validateCardId;

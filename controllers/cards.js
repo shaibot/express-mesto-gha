@@ -1,8 +1,10 @@
 // импортируем модель карточки из нашей схемы
+const { default: mongoose } = require('mongoose');
 const {
   handleError,
   INTERNAL_SERVER_ERROR,
   VALIDATION_ERROR,
+  NOT_FOUND_ERROR,
 } = require('../errors/errors');
 const Card = require('../models/card');
 
@@ -101,11 +103,18 @@ const deleteCards = async (req, res) => {
     const { cardId } = req.params;
     const userId = req.user._id;
 
+    // Проверяем валидность ID карточки
+    if (!mongoose.Types.ObjectId.isValid(cardId)) {
+      return res
+        .status(VALIDATION_ERROR)
+        .send({ message: 'Некорректный ID карточки' });
+    }
+
     // Проверяем наличие карточки с данным ID
     const card = await Card.findById(cardId);
     if (!card) {
       return res
-        .status(VALIDATION_ERROR)
+        .status(NOT_FOUND_ERROR)
         .send({ message: 'Карточка не найдена' });
     }
 
@@ -171,6 +180,12 @@ const deleteCards = async (req, res) => {
 // };
 
 const putLikeCard = (req, res, updateData) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+    return res.status(400).send({
+      message: 'Некорректный ID карточки',
+    });
+  }
+
   Card.findByIdAndUpdate(req.params.cardId, updateData, { new: true })
     .populate([
       { path: 'owner', model: 'user' },
@@ -179,14 +194,15 @@ const putLikeCard = (req, res, updateData) => {
     .then((card) => {
       if (!card) {
         return res
-          .status(VALIDATION_ERROR)
+          .status(NOT_FOUND_ERROR)
           .send({
-            message: `Карточка с указанным _id не найдена ${VALIDATION_ERROR}`,
+            message: `Карточка с указанным _id не найдена ${NOT_FOUND_ERROR}`,
           });
       }
       return res.status(200).send({ data: card });
     })
     .catch((err) => handleError(err, res));
+  return undefined;
 };
 
 const likeCard = (req, res) => {
