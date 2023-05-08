@@ -28,13 +28,19 @@ const getAllCards = async (req, res) => {
     const limit = req.query.limit || 100;
     const page = req.query.page || 1;
     const skip = (page - 1) * limit;
-    const count = await Card.countDocuments();
-    const cards = await Card.find({}).skip(skip).limit(limit);
+    // const count = await Card.countDocuments();
+    const cards = await Card.find({}).skip(skip).limit(limit)
+      .populate([
+        { path: 'owner', model: 'user' },
+        { path: 'likes', model: 'user' },
+      ]);
     if (cards.length === 0 && page !== 1) {
       throw new Error('Page not found');
     }
     if (!cards || cards.length === 0) {
-      return res.status(VALIDATION_ERROR).send({ message: 'Список карточек не найден' });
+      return res
+        .status(VALIDATION_ERROR)
+        .send({ message: 'Список карточек не найден' });
     }
     res.status(200).send({
       // count,
@@ -73,7 +79,11 @@ const createCard = async (req, res) => {
   try {
     const { name, link } = req.body;
     if (!name || name.length < 2 || name.length > 30) {
-      return res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+      return res
+        .status(VALIDATION_ERROR)
+        .send({
+          message: 'Переданы некорректные данные при создании пользователя',
+        });
     }
     if (!name || !link) {
       return res
@@ -87,9 +97,9 @@ const createCard = async (req, res) => {
         .send({ message: 'You must be logged in to create a card' });
     }
 
-    const cardData = { ...req.body, owner: req.user._id };
+    const cardData = { ...req.body, owner: req.user };
     const card = await Card.create(cardData);
-    const createdCard = await Card.findById(card._id).lean();
+    const createdCard = await Card.findById(card._id).populate('owner');
     return res.status(201).send(createdCard); // add return statement here
   } catch (err) {
     // console.error(`${err.name}: ${err.message}`);
@@ -130,7 +140,9 @@ const deleteCardById = async (req, res) => {
     // Проверяем наличие карточки с данным ID
     const card = await Card.findById(cardId).exec();
     if (!card) {
-      return res.status(NOT_FOUND_ERROR).send({ message: 'Карточка не найдена' });
+      return res
+        .status(NOT_FOUND_ERROR)
+        .send({ message: 'Карточка не найдена' });
     }
 
     // Проверяем, что текущий пользователь является владелецем карточки
@@ -162,20 +174,20 @@ const deleteCardById = async (req, res) => {
 //   );
 // };
 
-const likeCard = async (req) => {
-  try {
-    const card = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $addToSet: { likes: req.user._id } },
-      { new: true },
-    );
-    // console.log(card);
-    return card;
-  } catch (err) {
-    // console.error(err);
-    throw new Error('Failed to update card');
-  }
-};
+// const likeCard = async (req) => {
+//   try {
+//     const card = await Card.findByIdAndUpdate(
+//       req.params.cardId,
+//       { $addToSet: { likes: req.user._id } },
+//       { new: true },
+//     );
+//     // console.log(card);
+//     return card;
+//   } catch (err) {
+//     // console.error(err);
+//     throw new Error('Failed to update card');
+//   }
+// };
 
 // const dislikeCard = (req) => {
 //   Card.findByIdAndUpdate(
@@ -185,16 +197,72 @@ const likeCard = async (req) => {
 //   );
 // };
 
-const dislikeCard = async (req) => {
+// const putLikeCard = (req, res, updateData) => {
+//   Card.findByIdAndUpdate(req.params.cardId, updateData, { new: true })
+//     .populate([
+//       { path: 'owner', model: 'user' },
+//       { path: 'likes', model: 'user' },
+//     ])
+//     .then((card) => {
+//       if (card) {
+//         return res.status(200).send({ data: card });
+//       }
+//       return res
+//         .status(NOT_FOUND_ERROR)
+//         .send({
+//           message: `Карточка с указанным _id не найдена ${NOT_FOUND_ERROR}`,
+//         });
+//     })
+//     .catch((err) => handleError(err, res));
+// };
+
+const putLikeCard = async (req, res, updateData) => {
   try {
-    const updatedCard = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $pull: { likes: req.user._id } }, // убрать _id из массива
-      { new: true },
-    );
-    return updatedCard;
+    const { cardId } = req.params;
+    if (!cardId) {
+      return res.status(NOT_FOUND_ERROR).send({
+        message: 'Не указан идентификатор карточки',
+      });
+    }
+
+    const card = await Card.findByIdAndUpdate(cardId, updateData, { new: true })
+      .populate([
+        { path: 'owner', model: 'user' },
+        { path: 'likes', model: 'user' },
+      ]);
+
+    if (card) {
+      return res.status(200).send({ data: card });
+    }
+
+    return res.status(NOT_FOUND_ERROR).send({
+      message: `Карточка с указанным _id не найдена ${NOT_FOUND_ERROR}`,
+    });
   } catch (err) {
-    throw new Error('Could not dislike card');
+    handleError(err, res);
+  }
+  return undefined;
+};
+
+const likeCard = (req, res) => {
+  const owner = req.user._id;
+  const newData = { $addToSet: { likes: owner } };
+  putLikeCard(req, res, newData);
+};
+
+// const dislikeCard = (req, res) => {
+//   const owner = req.user._id;
+//   const newData = { $pull: { likes: owner } };
+//   putLikeCard(req, res, newData);
+// };
+
+const dislikeCard = (req, res) => {
+  try {
+    const owner = req.user._id;
+    const newData = { $pull: { likes: owner } };
+    putLikeCard(req, res, newData);
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
