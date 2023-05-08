@@ -1,7 +1,6 @@
 // импортируем модель карточки из нашей схемы
 const {
   handleError,
-  NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
   VALIDATION_ERROR,
 } = require('../errors/errors');
@@ -106,7 +105,7 @@ const deleteCards = async (req, res) => {
     const card = await Card.findById(cardId);
     if (!card) {
       return res
-        .status(NOT_FOUND_ERROR)
+        .status(VALIDATION_ERROR)
         .send({ message: 'Карточка не найдена' });
     }
 
@@ -180,9 +179,9 @@ const putLikeCard = (req, res, updateData) => {
     .then((card) => {
       if (!card) {
         return res
-          .status(NOT_FOUND_ERROR)
+          .status(VALIDATION_ERROR)
           .send({
-            message: `Карточка с указанным _id не найдена ${NOT_FOUND_ERROR}`,
+            message: `Карточка с указанным _id не найдена ${VALIDATION_ERROR}`,
           });
       }
       return res.status(200).send({ data: card });
