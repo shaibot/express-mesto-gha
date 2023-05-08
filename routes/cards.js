@@ -6,7 +6,6 @@ const {
   dislikeCard,
   deleteCards,
 } = require('../controllers/cards');
-// const validateLikeRequest = require('../middlewares/validateLikeRequest');
 
 cardsRouter.get('/', getAllCards);
 cardsRouter.post('/', createCard);

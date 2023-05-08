@@ -2,7 +2,6 @@
 const { default: mongoose } = require('mongoose');
 const {
   handleError,
-  INTERNAL_SERVER_ERROR,
   VALIDATION_ERROR,
   NOT_FOUND_ERROR,
 } = require('../errors/errors');
@@ -17,11 +16,11 @@ const getAllCards = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate([
-        { path: 'owner', model: 'user' },
-        { path: 'likes', model: 'user' },
+        { path: 'owner' },
+        { path: 'likes' },
       ]);
     if (cards.length === 0 && page !== 1) {
-      throw new Error('Page not found');
+      throw new Error('Страница не найдена');
     }
     if (!cards || cards.length === 0) {
       return res
@@ -34,7 +33,7 @@ const getAllCards = async (req, res) => {
   } catch (error) {
     handleError(error, res);
   }
-  return undefined;
+  return null;
 };
 
 const createCard = async (req, res) => {
@@ -48,13 +47,13 @@ const createCard = async (req, res) => {
     if (!name || !link) {
       return res
         .status(VALIDATION_ERROR)
-        .send({ message: 'Name and link are required' });
+        .send({ message: 'Поля "name" и "link" обязательно нужно заполнить' });
     }
 
     if (!req.user || !req.user._id) {
       return res
         .status(VALIDATION_ERROR)
-        .send({ message: 'You must be logged in to create a card' });
+        .send({ message: 'Войдите, чтобы редактировать карточку' });
     }
 
     const cardData = { ...req.body, owner: req.user };
@@ -65,37 +64,12 @@ const createCard = async (req, res) => {
     if (err.codeName === 'DuplicateKey') {
       return res
         .status(VALIDATION_ERROR)
-        .send({ message: 'A card with the same name already exists' });
+        .send({ message: 'Карточка с таким именем уже существует' });
     }
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: 'An error occurred while processing your request' });
+    handleError(err, res);
   }
+  return null;
 };
-
-// const deleteCards = (req, res) => {
-//   Card.findByIdAndDelete(req.params.cardId)
-//     .populate([{ path: 'owner', model: 'user' }])
-//     .then(() => res.send({ message: 'Карточка была удалена' }))
-//     .catch((err) => handleError(err, res));
-// };
-
-// // обработчик DELETE-запроса на удаление карточки по ID
-// const deleteCardById = (req, res) => {
-//   // достаем из параметров запроса ID карточки
-//   const { cardId } = req.params;
-
-//   // вызываем метод findByIdAndRemove и передаем ему ID карточки
-//   Card.findByIdAndRemove(cardId)
-//     .then((deletedCard) => {
-//       // отправляем удаленную карточку обратно на клиент
-//       res.send(deletedCard);
-//     })
-//     .catch((err) => {
-//       // отправляем ошибку обратно на клиент
-//       handleError(err, res);
-//     });
-// };
 
 const deleteCards = async (req, res) => {
   try {
@@ -131,6 +105,11 @@ const deleteCards = async (req, res) => {
     // Отправляем удаленную карточку обратно на клиент
     return res.send(deletedCard);
   } catch (err) {
+    if (err.name === 'CastError') {
+      return res.status(VALIDATION_ERROR).send({
+        message: 'Некорректный запрос',
+      });
+    }
     // Отправляем ошибку обратно на клиент
     handleError(err, res);
   }
@@ -138,46 +117,6 @@ const deleteCards = async (req, res) => {
   // Гарантируем возврат значения
   return null;
 };
-
-// const deleteCards = (req, res) => {
-//   Card.findByIdAndDelete(req.params.cardId)
-//     .populate([
-//       { path: 'owner', model: 'user' },
-//     ])
-//     .then(() => res.send({ message: 'Карточка была удалена' }))
-//     .catch((err) => handleError(err, res));
-// };
-
-// const likeCard = (req) => {
-//   Card.findByIdAndUpdate(
-//     req.params.cardId,
-//     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-//     { new: true },
-//   );
-// };
-
-// const likeCard = async (req) => {
-//   try {
-//     const card = await Card.findByIdAndUpdate(
-//       req.params.cardId,
-//       { $addToSet: { likes: req.user._id } },
-//       { new: true },
-//     );
-//     // console.log(card);
-//     return card;
-//   } catch (err) {
-//     // console.error(err);
-//     throw new Error('Failed to update card');
-//   }
-// };
-
-// const dislikeCard = (req) => {
-//   Card.findByIdAndUpdate(
-//     req.params.cardId,
-//     { $pull: { likes: req.user._id } }, // убрать _id из массива
-//     { new: true },
-//   );
-// };
 
 const putLikeCard = (req, res, updateData) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
@@ -199,10 +138,18 @@ const putLikeCard = (req, res, updateData) => {
             message: `Карточка с указанным _id не найдена ${NOT_FOUND_ERROR}`,
           });
       }
-      return res.status(200).send({ data: card });
+      return res.status(200).send(card);
     })
-    .catch((err) => handleError(err, res));
-  return undefined;
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(VALIDATION_ERROR).send({
+          message: 'Некорректный запрос',
+        });
+      }
+      // Отправляем ошибку обратно на клиент
+      return handleError(err, res);
+    });
+  return null;
 };
 
 const likeCard = (req, res) => {
@@ -210,31 +157,6 @@ const likeCard = (req, res) => {
   const newData = { $addToSet: { likes: owner } };
   putLikeCard(req, res, newData);
 };
-
-// const checkCardId = (card, res) => {
-//   if (card) {
-//     return res.status(200).send({ data: card });
-//   }
-//   return res
-//     .status(NOT_FOUND_ERROR)
-//     .send({ message: `Карточка с таким _id не найдена ${NOT_FOUND_ERROR}` });
-// };
-
-// const updateLikes = (req, res, updateData) => {
-//   Card.findByIdAndUpdate(req.params.cardId, updateData, { new: true })
-//     .populate([
-//       { path: 'owner', model: 'user' },
-//       { path: 'likes', model: 'user' },
-//     ])
-//     .then((user) => checkCardId(user, res))
-//     .catch((err) => handleError(err, res));
-// };
-
-// const likeCard = (req, res) => {
-//   const owner = req.user._id;
-//   const newData = { $addToSet: { likes: owner } };
-//   updateLikes(req, res, newData);
-// };
 
 const dislikeCard = (req, res) => {
   const owner = req.user._id;

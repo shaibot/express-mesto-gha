@@ -1,4 +1,3 @@
-// const path = require('path');
 const process = require('process');
 
 // установить bodyParser
@@ -9,6 +8,8 @@ const mongoose = require('mongoose');
 // создать сервер на Экспресс
 const express = require('express');
 
+const helmet = require('helmet');
+
 const { PORT = 3000, BASE_PATH } = process.env;
 
 const app = express();
@@ -16,15 +17,11 @@ const app = express();
 // экспортируем роутеры
 const router = require('./routes/index');
 
+app.use(helmet());
+
 mongoose
   .connect('mongodb://127.0.0.1:27017/mestodb')
   .catch((err) => console.log(err));
-
-// mongoose
-//   .connect('mongodb://localhost:27017/mestodb')
-//   .catch((err) => console.log(err));
-
-// app.use(express.json());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -38,12 +35,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/', router);
-
-// app.use((req, res) => {
-//   res
-//     .status(ERROR_NOT_FOUND)
-//     .send({ message: `Страница не найдена ${ERROR_NOT_FOUND}` });
-// });
 
 process.on('uncaughtException', (err, origin) => {
   console.log(
