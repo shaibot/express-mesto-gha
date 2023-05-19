@@ -1,41 +1,38 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
 
-const cardSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, 'Поле "name" должно быть заполнено'],
-      minlength: [2, 'Минимальная длина поля "name" - 2'],
-      maxlength: [30, 'Максимальная длина поля "name" - 30'],
-    },
-    link: {
-      type: String,
-      validate: {
-        validator: (v) => validator.isURL(v),
-        message: 'Некорректный URL',
-      },
-      required: [true, 'Поле "link" должно быть заполнено'],
-    },
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'user',
-      required: true,
-    },
-    likes: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'user',
-      default: [],
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+const REGEX = /(https?:\/\/)(www)?([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=])*#?$/;
+
+const cardSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    minlength: 2,
+    maxlength: 30,
+    required: true,
+  },
+  link: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (v) => REGEX.test(v),
+      message: 'Указана некорректная ссылка',
     },
   },
-  { versionKey: false },
-);
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'user',
+  },
+  likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      default: [],
+      ref: 'user',
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-// Модель карточки
-const Card = mongoose.model('card', cardSchema);
-
-module.exports = Card;
+module.exports = mongoose.model('card', cardSchema);
