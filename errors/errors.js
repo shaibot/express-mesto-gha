@@ -9,6 +9,9 @@ const errorNotFound = (req, res) => {
     .status(NOT_FOUND_ERROR)
     .send({ message: 'Cтраница не найдена' });
 };
+const ERROR_UNAUTHORIZED = 401;
+const ERROR_FORBIDDEN = 403;
+const ERROR_CONFLICT = 409;
 
 module.exports = {
   NOT_FOUND_ERROR,
@@ -16,4 +19,7 @@ module.exports = {
   INTERNAL_SERVER_ERROR,
   handleError,
   errorNotFound,
+  ERROR_UNAUTHORIZED,
+  ERROR_FORBIDDEN,
+  ERROR_CONFLICT,
 };

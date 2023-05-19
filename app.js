@@ -14,6 +14,7 @@ const { PORT = 3000, BASE_PATH } = process.env;
 
 const app = express();
 
+const errors = require('./middlewares/errors');
 // экспортируем роутеры
 const router = require('./routes/index');
 
@@ -26,15 +27,8 @@ mongoose
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '644fc37a80b31ef2247488a5', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-
-  next();
-});
-
 app.use('/', router);
+app.use(errors);
 
 process.on('uncaughtException', (err, origin) => {
   console.log(
