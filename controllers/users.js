@@ -1,27 +1,32 @@
-// const { default: mongoose } = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
-const {
-  NOT_FOUND_ERROR,
-  // VALIDATION_ERROR,
-  // handleError,
-  // INTERNAL_SERVER_ERROR,
-  ERROR_UNAUTHORIZED,
-} = require('../errors/errors');
+
 const User = require('../models/user');
+const {
+  CODE,
+  CODE_CREATED,
+  ERROR_NOT_FOUND,
+  ERROR_UNAUTHORIZED,
+} = require('../utils/constants');
 
 const checkUser = (user, res) => {
   if (user) {
     return res.send({ data: user });
   }
   return res
-    .status(NOT_FOUND_ERROR)
-    .send({ message: 'Пользователь c таким _id не найден' });
+    .status(ERROR_NOT_FOUND)
+    .send({ message: 'Пользователь по указанному _id не найден' });
 };
 
-const getUsersId = (req, res, next) => {
+module.exports.getUsers = (req, res, next) => {
+  User.find({})
+    .then((user) => res.status(CODE).send(user))
+    .catch(next);
+};
+
+module.exports.getId = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
@@ -31,19 +36,33 @@ const getUsersId = (req, res, next) => {
     });
 };
 
-const getCurrentUser = (req, res, next) => {
+module.exports.getInfoProfile = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => res.send(user))
     .catch(next);
 };
 
-const getUsers = (req, res, next) => {
-  User.find({})
-    .then((user) => res.status(201).send(user))
+const updateUser = (req, res, updateData, next) => {
+  const userId = req.user._id;
+  User.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    runValidators: true,
+  })
+    .then((user) => checkUser(user, res))
     .catch(next);
 };
 
-const createUser = (req, res, next) => {
+module.exports.updateProfile = (req, res, next) => {
+  const { name, about } = req.body;
+  updateUser(req, res, { name, about }, next);
+};
+
+module.exports.updateAvatar = (req, res, next) => {
+  const { avatar } = req.body;
+  updateUser(req, res, { avatar }, next);
+};
+
+module.exports.createUser = (req, res, next) => {
   const {
     name,
     about,
@@ -61,58 +80,13 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then((user) => res
-      .status(201)
-      .send(user))
+      .status(CODE_CREATED)
+      .send({ data: user }))
 
     .catch(next);
 };
 
-const updateUser = (req, res, updateData, next) => {
-  const userId = req.user._id;
-  User.findByIdAndUpdate(userId, updateData, {
-    new: true,
-    runValidators: true,
-  })
-    .then((user) => checkUser(user, res))
-    .catch(next);
-};
-
-const updateProfile = (req, res, next) => {
-  const { name, about } = req.body;
-  updateUser(req, res, { name, about }, next);
-};
-
-const updateAvatar = (req, res, next) => {
-  const { avatar } = req.body;
-  updateUser(req, res, { avatar }, next);
-};
-
-// const login = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     // ищем пользователя в базе данных по email и паролю
-//     const user = await User.findUserByCredentials(email, password);
-
-//     // создаем JWT
-//     const token = jwt.sign({ _id: user._id }, 'your_secret_key', {
-//       expiresIn: '7d',
-//     });
-
-//     // отправляем токен в httpOnly cookie
-//     res.cookie('token', token, {
-//       httpOnly: true,
-//     });
-
-//     // отправляем успешный ответ с токеном в заголовке
-//     res.json({ success: true });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(401).json({ error: err.message });
-//   }
-// };
-
-const login = (req, res) => {
+module.exports.login = (req, res) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -134,27 +108,4 @@ const login = (req, res) => {
         .status(ERROR_UNAUTHORIZED)
         .send({ message: err.message });
     });
-};
-// // Контроллер для получения информации о текущем пользователе
-// const getCurrentUser = async (req, res) => {
-//   try {
-//     const user = await User.findById(req.user._id);
-//     if (!user) {
-//       return res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь не найден' });
-//     }
-//     return res.status(200).send(user);
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка сервера' });
-//   }
-// };
-
-module.exports = {
-  createUser,
-  getUsers,
-  getUsersId,
-  updateProfile,
-  updateAvatar,
-  login,
-  getCurrentUser,
 };

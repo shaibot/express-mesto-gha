@@ -1,17 +1,20 @@
 const router = require('express').Router();
-
-const { login, createUser } = require('../controllers/users');
-const auth = require('../middlewares/auth');
+const signinRouter = require('./signin');
+const signupRouter = require('./signup');
 const cardsRouter = require('./cards');
-const errorNotFoundRouter = require('./notFoundError');
-
 const usersRouter = require('./users');
+const auth = require('../middlewares/auth');
+const NotFound = require('../Error/NotFound');
 
-router.post('/signin', login);
-router.post('/signup', createUser);
-router.use(auth); // все роуты ниже этой строки будут защищены
+router.use('/', signinRouter);
+router.use('/', signupRouter);
+
+router.use(auth);
+
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
-router.use('*', errorNotFoundRouter);
+router.use('*', (req, res, next) => {
+  next(new NotFound('По указанному адресу страница не найдена'));
+});
 
 module.exports = router;

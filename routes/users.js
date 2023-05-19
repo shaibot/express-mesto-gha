@@ -2,17 +2,17 @@ const usersRouter = require('express').Router();
 
 const {
   getUsers,
-  getUsersId,
+  getInfoProfile,
+  getId,
   updateProfile,
   updateAvatar,
-  getCurrentUser,
 } = require('../controllers/users');
+const { validateUserId, validateUpdateProfile, validateUpdateAvatar } = require('../middlewares/userValidator');
 
 usersRouter.get('/', getUsers);
-usersRouter.get('/:userId', getUsersId);
-usersRouter.get('/me', getCurrentUser);
-
-usersRouter.patch('/me', updateProfile); // обновляет профиль
-usersRouter.patch('/me/avatar', updateAvatar); // обновляет аватар
+usersRouter.get('/me', getInfoProfile);
+usersRouter.get('/:userId', validateUserId, getId);
+usersRouter.patch('/me', validateUpdateProfile, updateProfile);
+usersRouter.patch('/me/avatar', validateUpdateAvatar, updateAvatar);
 
 module.exports = usersRouter;

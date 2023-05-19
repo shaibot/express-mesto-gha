@@ -1,6 +1,5 @@
 const { Joi, celebrate } = require('celebrate');
-
-const REGEX = /(https?:\/\/)(www)?([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=])*#?$/;
+const { REGEX } = require('../utils/constants');
 
 module.exports.validateSignin = celebrate({
   body: Joi.object().keys({

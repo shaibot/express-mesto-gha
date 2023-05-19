@@ -1,27 +1,30 @@
 const { ValidationError, CastError, DocumentNotFoundError } = require('mongoose').Error;
-const ErrorNotFound = require('../errors/ErrorNotFound');
-const Forbidden = require('../errors/Forbidden');
-const Unauthorized = require('../errors/Unauthorized');
 const {
-  VALIDATION_ERROR, NOT_FOUND_ERROR, ERROR_CONFLICT, INTERNAL_SERVER_ERROR,
-} = require('../errors/errors');
+  ERROR_CODE,
+  ERROR_NOT_FOUND,
+  ERROR_CONFLICT,
+  ERROR_INTERNAL_SERVER,
+} = require('../utils/constants');
+const Unauthorized = require('../Error/Unauthorized');
+const NotFound = require('../Error/NotFound');
+const Forbidden = require('../Error/Forbidden');
 
 module.exports = (err, req, res, next) => {
   if (err instanceof CastError || err instanceof ValidationError) {
     return res
-      .status(VALIDATION_ERROR)
-      .send({ message: `Переданы некорректные данные ${VALIDATION_ERROR}` });
+      .status(ERROR_CODE)
+      .send({ message: `Переданы некорректные данные ${ERROR_CODE}` });
   }
 
   if (err instanceof DocumentNotFoundError) {
     return res
-      .status(NOT_FOUND_ERROR)
+      .status(ERROR_NOT_FOUND)
       .send({
-        message: `Пользователь с указанным _id не найден ${NOT_FOUND_ERROR}`,
+        message: `Пользователь с указанным _id не найден ${ERROR_NOT_FOUND}`,
       });
   }
 
-  if (err instanceof ErrorNotFound || err instanceof Unauthorized || err instanceof Forbidden) {
+  if (err instanceof NotFound || err instanceof Unauthorized || err instanceof Forbidden) {
     const { message } = err;
     return res
       .status(err.type)
@@ -35,7 +38,7 @@ module.exports = (err, req, res, next) => {
   }
 
   res
-    .status(INTERNAL_SERVER_ERROR)
+    .status(ERROR_INTERNAL_SERVER)
     .send({
       message: 'На сервере произошла ошибка',
     });

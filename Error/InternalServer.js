@@ -1,9 +1,9 @@
-const { INTERNAL_SERVER_ERROR } = require('./errors');
+const { ERROR_INTERNAL_SERVER } = require('../utils/constants');
 
 class InternalServer extends Error {
   constructor(message) {
     super(message);
-    this.type = INTERNAL_SERVER_ERROR;
+    this.type = ERROR_INTERNAL_SERVER;
   }
 }
 
