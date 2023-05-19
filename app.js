@@ -6,7 +6,7 @@ const errorCelebrate = require('celebrate').errors;
 const router = require('./routes/index');
 const { ERROR_INTERNAL_SERVER } = require('./utils/constants');
 const { PORT, MONGODB } = require('./config');
-const { handlerErrors } = require('./middlewares/handlerErrors');
+const handlerErrors = require('./middlewares/handlerErrors');
 
 const app = express();
 mongoose.connect(MONGODB);
