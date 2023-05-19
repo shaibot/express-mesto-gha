@@ -6,7 +6,7 @@ const {
   ERROR_INTERNAL_SERVER,
 } = require('../utils/constants');
 const Unauthorized = require('../Error/Unauthorized');
-const NotFound = require('../Error/NotFound');
+const NotFound = require('../Error/NotFoundError');
 const Forbidden = require('../Error/Forbidden');
 
 module.exports = (err, req, res, next) => {

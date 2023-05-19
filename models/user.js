@@ -4,6 +4,21 @@ const validator = require('validator');
 const { REGEX } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: (email) => validator.isEmail(email),
+      message: ({ value }) => `${value} некорректный, попробуйте использовать другой email`,
+    },
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
   name: {
     type: String,
     minlength: 2,
@@ -20,28 +35,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: (v) => REGEX.test(v),
-      message: 'Указана некорректная ссылка',
+      message: 'Некорректная ссылка',
     },
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    validate: {
-      validator: (email) => validator.isEmail(email),
-      message: ({ value }) => `${value} не является действительным адресом электронной почты!`,
-    },
-    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
-  },
-  password: {
-    type: String,
-    required: true,
-    select: false,
   },
 }, { toJSON: { useProjection: true }, toObject: { useProjection: true } });
 
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function findUserByCredentials(email, password) {
   return this
     .findOne({ email })
     .select('+password')
