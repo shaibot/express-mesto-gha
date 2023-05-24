@@ -1,3 +1,4 @@
+const BadRequest = require('../Error/BadRequest');
 const Forbidden = require('../Error/Forbidden');
 const NotFoundError = require('../Error/NotFoundError');
 const Card = require('../models/card');
@@ -7,13 +8,12 @@ const {
   ERROR_NOT_FOUND,
 } = require('../utils/constants');
 
-const checkCard = (card, res) => {
+const checkCard = (card, res, next) => {
   if (card) {
     return res.send({ data: card });
   }
-  return res
-    .status(ERROR_NOT_FOUND)
-    .send({ message: `Карточка с указанным _id не найдена ${ERROR_NOT_FOUND}` });
+  const error = new NotFoundError(`Карточка с указанным _id не найдена ${ERROR_NOT_FOUND}`);
+  return next(error);
 };
 
 const getCards = (req, res, next) => {
@@ -37,29 +37,27 @@ const createCard = (req, res, next) => {
     .catch(next);
 };
 
-const deleteCard = (req, res, next) => {
+const deleteCard = async (req, res, next) => {
   const _id = req.params.cardId;
 
-  Card.findOne({ _id })
-    .populate([
-      { path: 'owner', model: 'user' },
-    ])
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка была удалена');
-      }
-      if (card.owner._id.toString() !== req.user._id.toString()) {
-        throw new Forbidden('Вы не можете удалить карточку другого пользователя');
-      }
-      Card.findByIdAndDelete({ _id })
-        .populate([
-          { path: 'owner', model: 'user' },
-        ])
-        .then((cardDeleted) => {
-          res.send({ data: cardDeleted });
-        });
-    })
-    .catch(next);
+  try {
+    const card = await Card.findOne({ _id }).populate([{ path: 'owner', model: 'user' }]);
+    if (!card) {
+      throw new NotFoundError('Карточка была удалена');
+    }
+    if (card.owner._id.toString() !== req.user._id.toString()) {
+      throw new Forbidden('Вы не можете удалить карточку другого пользователя');
+    }
+
+    const result = await Card.deleteOne({ _id });
+    if (result.deletedCount === 0) {
+      throw new BadRequest('Не удалось удалить карточку');
+    }
+
+    res.send({ data: card });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const updateLikes = (req, res, updateData, next) => {

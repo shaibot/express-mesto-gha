@@ -10,6 +10,7 @@ const {
   ERROR_NOT_FOUND,
   ERROR_UNAUTHORIZED,
 } = require('../utils/constants');
+const NotFoundError = require('../Error/NotFoundError');
 
 const createUser = (req, res, next) => {
   const {
@@ -35,13 +36,12 @@ const createUser = (req, res, next) => {
     .catch(next);
 };
 
-const checkUser = (user, res) => {
+const checkUser = (user, res, next) => {
   if (user) {
     return res.send({ data: user });
   }
-  return res
-    .status(ERROR_NOT_FOUND)
-    .send({ message: 'Пользователь по указанному _id не найден' });
+  const error = new NotFoundError(`Пользователь по указанному _id не найден ${ERROR_NOT_FOUND}`);
+  return next(error);
 };
 
 const getUsers = (req, res, next) => {
