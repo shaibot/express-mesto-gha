@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { DocumentNotFoundError } = require('mongoose').Error;
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -54,7 +55,12 @@ const getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    .then((user) => checkUser(user, res))
+    .then((user) => {
+      if (!user) {
+        throw new DocumentNotFoundError('Пользователь не найден');
+      }
+      checkUser(user, res);
+    })
     .catch((error) => {
       next(error);
     });

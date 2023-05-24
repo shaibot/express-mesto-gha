@@ -1,3 +1,4 @@
+const { DocumentNotFoundError } = require('mongoose').Error;
 const BadRequest = require('../Error/BadRequest');
 const Forbidden = require('../Error/Forbidden');
 const NotFoundError = require('../Error/NotFoundError');
@@ -66,7 +67,12 @@ const updateLikes = (req, res, updateData, next) => {
       { path: 'owner', model: 'user' },
       { path: 'likes', model: 'user' },
     ])
-    .then((user) => checkCard(user, res))
+    .then((card) => {
+      if (!card) {
+        throw new DocumentNotFoundError('Карточка не найдена');
+      }
+      checkCard(card, res);
+    })
     .catch(next);
 };
 
