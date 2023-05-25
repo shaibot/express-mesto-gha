@@ -9,7 +9,6 @@ const {
   CODE,
   CODE_CREATED,
   ERROR_NOT_FOUND,
-  ERROR_UNAUTHORIZED,
 } = require('../utils/constants');
 const NotFoundError = require('../Error/NotFoundError');
 
