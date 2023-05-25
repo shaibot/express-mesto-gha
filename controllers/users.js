@@ -106,7 +106,7 @@ const login = (req, res, next) => {
           httpOnly: true,
           sameSite: true,
         })
-        .send({ token });
+        .send();
     })
     .catch(next);
   // .catch((err) => {
