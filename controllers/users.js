@@ -91,30 +91,32 @@ const updateAvatar = (req, res, next) => {
   updateUser(req, res, { avatar }, next);
 };
 
-const login = (req, res, next) => {
-  const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
-        { expiresIn: '7d' },
-      );
-      res
-        .cookie('token', token, {
-          maxAge: 3600000,
-          httpOnly: true,
-          sameSite: true,
-        })
-        .send();
-    })
-    .catch(next);
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findUserByCredentials(email, password);
+
+    const token = jwt.sign(
+      { _id: user._id },
+      NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+      { expiresIn: '7d' },
+    );
+
+    res.cookie('token', token, {
+      maxAge: 3600000,
+      httpOnly: true,
+      sameSite: true,
+    }).send({ token });
+  } catch (err) {
+    next(err);
+  }
+};
   // .catch((err) => {
   //   res
   //     .status(ERROR_UNAUTHORIZED)
   //     .send({ message: err.message });
   // });
-};
 
 module.exports = {
   createUser,
