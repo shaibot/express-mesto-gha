@@ -92,7 +92,7 @@ const updateAvatar = (req, res, next) => {
   updateUser(req, res, { avatar }, next);
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -109,11 +109,12 @@ const login = (req, res) => {
         })
         .send({ token });
     })
-    .catch((err) => {
-      res
-        .status(ERROR_UNAUTHORIZED)
-        .send({ message: err.message });
-    });
+    .catch(next);
+  // .catch((err) => {
+  //   res
+  //     .status(ERROR_UNAUTHORIZED)
+  //     .send({ message: err.message });
+  // });
 };
 
 module.exports = {

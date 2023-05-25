@@ -7,13 +7,16 @@ const router = require('./routes/index');
 const { ERROR_INTERNAL_SERVER } = require('./utils/constants');
 const { PORT, MONGODB } = require('./config');
 const handlerErrors = require('./middlewares/handlerErrors');
+// const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
 mongoose.connect(MONGODB);
 
 app.use(cookieParser());
 app.use(express.json());
+// app.use(requestLogger); // подключаем логгер запросов
 app.use('/', router);
+// app.use(errorLogger); // подключаем логгер ошибок
 app.use(errorCelebrate());
 app.use(handlerErrors);
 
